@@ -1,0 +1,28 @@
+{
+    "name": "saidy/voyager-survey",
+    "version": "1.0.0",
+    "description": "Create a Dependent dropdown fields to Voyager plugin",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "tcg/voyager": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Saidy\\VoyagerSurvey\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Md. Sheikh Saidy",
+            "email": "saidylive@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Saidy\\VoyagerSurvey\\Providers\\VoyagerSurveyServiceProvider"
+            ]
+        }
+    }
+}
