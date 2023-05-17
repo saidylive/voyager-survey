@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Http\Request;
 
 /*
@@ -12,6 +13,9 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::group(['prefix' => 'v1', 'as' => 'api.v1.'], function() {
-//    Route::post('/survey-dropdown', ['uses' => 'Saidy\\VoyagerSurvey\\Http\\Controllers\\Api\\V1\\DependentDropdownController@index', 'as' => 'dropdown']);
+Route::group(['prefix' => 'public', 'as' => 'saidy.voyager.survey.', 'middleware' => ['web']], function () {
+    Route::get('/survey/{survey_key}', ['uses' => 'Saidy\\VoyagerSurvey\\Http\\Controllers\\PublicSurveyController@index', 'as' => 'public_view']);
+    Route::get('/survey/{survey_key}/{id}/thanks', ['uses' => 'Saidy\\VoyagerSurvey\\Http\\Controllers\\PublicSurveyController@thanks', 'as' => 'public_view_thanks']);
+    Route::post('/survey/{survey_key}', ['uses' => 'Saidy\\VoyagerSurvey\\Http\\Controllers\\PublicSurveyController@store_survey', 'as' => 'public_view_store']);
+    Route::put('/survey/{survey_key}', ['uses' => 'Saidy\\VoyagerSurvey\\Http\\Controllers\\PublicSurveyController@update', 'as' => 'public_view_update']);
 });

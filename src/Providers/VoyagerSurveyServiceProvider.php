@@ -4,7 +4,7 @@ namespace Saidy\VoyagerSurvey\Providers;
 
 use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\ServiceProvider;
-use Saidy\VoyagerSurvey\FormFields\SelectDependentDropdown;
+use Saidy\VoyagerSurvey\Actions\SurveyAction;
 
 
 class VoyagerSurveyServiceProvider extends ServiceProvider
@@ -26,15 +26,34 @@ class VoyagerSurveyServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Voyager::addFormField(SelectDependentDropdown::class);
+        Voyager::addAction(SurveyAction::class);
+        $this->registerConfigs();
+
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'saidy-voyager-survey');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/web.php');
+        $this->loadMigrationsFrom(realpath(__DIR__.'/../../migrations/'));
 
-        // $this->publishes([
-        //     __DIR__.'/../../resources/views' => resource_path('views/vendor/voyager'),
-        // ]);
 
-        // $this->publishes([
-        //     __DIR__.'/../../public' => public_path('/'),
-        // ], 'public');
+
+        $this->publishes([
+            __DIR__ . '/../../resources/views'                => resource_path('views/vendor/saidy-voyager-survey'),
+            __DIR__ . '/../../resources/views/bread/partials' => resource_path('views/vendor/voyager/bread/partials'),
+        ], 'views');
+
+        $this->publishes([
+            __DIR__ . '/../../migrations/' => database_path('migrations/migrations'),
+        ], 'saidy-voyager-migrations');
+
+        $this->publishes([
+            __DIR__ .'/../../config/voyager-survey.php' => config_path('voyager/survey.php'),
+        ], 'saidy-voyager-config');
+    }
+
+    public function registerConfigs()
+    {
+        $this->mergeConfigFrom(
+            __DIR__ .'/../../config/voyager-survey.php',
+            'voyager.survey'
+        );
     }
 }
