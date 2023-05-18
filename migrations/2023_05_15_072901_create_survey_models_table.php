@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string("slug")->nullable();
             $table->string("survey_key")->unique();
             $table->integer("row_id")->nullable();
+            $table->string("column")->nullable();
+            $table->string("target_slug")->nullable();
+            $table->string("target_slug_column")->nullable();
             $table->string("method")->default("list");
             $table->timestamp("starts_at")->nullable();
             $table->timestamp("ends_at")->nullable();

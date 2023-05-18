@@ -20,8 +20,26 @@ class PublicSurveyController extends VoyagerBaseController
 
         $model = SurveyModel::where("survey_key", $survey_key)->first();
         if (!$model) abort(404);
+        $is_single = $model->method == "row";
+        $slug = $is_single ? $model->target_slug : $model->slug;
 
-        $dataType = Voyager::model('DataType')->where('slug', '=', $model->slug)->first();
+        $reference_datatype = null;
+        $target_slug_column = null;
+        $reference_model = null;
+        $reference_id = null;
+
+        if ($is_single) {
+            $reference_datatype = Voyager::model('DataType')->where('slug', '=', $model->slug)->first();
+            if ($reference_datatype && strlen($reference_datatype->model_name) != 0) {
+                $reference_model = call_user_func(array($reference_datatype->model_name, 'find'), $model->row_id);
+                if ($reference_model) {
+                    $reference_id = $reference_model->{$model->column};
+                    $target_slug_column = $model->target_slug_column;
+                }
+            }
+        }
+
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
         $dataTypeContent = (strlen($dataType->model_name) != 0)
             ? new $dataType->model_name()
             : false;
@@ -37,7 +55,18 @@ class PublicSurveyController extends VoyagerBaseController
         $errors = [];
         $view = 'saidy-voyager-survey::bread.edit-add';
 
-        return Voyager::view($view, compact('survey_key', 'model', 'dataType', 'dataTypeContent', 'isModelTranslatable'));
+        return Voyager::view($view, compact(
+            'survey_key',
+            'model',
+            'dataType',
+            'dataTypeContent',
+            'isModelTranslatable',
+            'reference_datatype',
+            'target_slug_column',
+            'reference_model',
+            'reference_id',
+            'is_single',
+        ));
     }
 
     private function duplicate_request(Request $req, $data)
@@ -68,10 +97,35 @@ class PublicSurveyController extends VoyagerBaseController
         $model = SurveyModel::where("survey_key", $survey_key)->first();
         if (!$model) abort(404);
 
-        $slug = $model->slug;
+        $is_single = $model->method == "row";
+        $slug = $is_single ? $model->target_slug : $model->slug;
+
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
+
+        $reference_datatype = null;
+        $target_slug_column = null;
+        $reference_model = null;
+        $reference_id = null;
+
+        if ($is_single) {
+            $reference_datatype = Voyager::model('DataType')->where('slug', '=', $model->slug)->first();
+            if ($reference_datatype && strlen($reference_datatype->model_name) != 0) {
+                $reference_model = call_user_func(array($reference_datatype->model_name, 'find'), $model->row_id);
+                if ($reference_model) {
+                    $reference_id = $reference_model->{$model->column};
+                    $target_slug_column = $model->target_slug_column;
+                }
+            }
+        }
+
+
+
         $input_all = $request->all();
         $inputs = $request->all();
+        if ($target_slug_column && $reference_id) {
+            $inputs[$target_slug_column] = $reference_id;
+        }
+
         foreach ($inputs as $key => $value) {
             if (is_array($value)) {
                 $row = $dataType->addRows()->where("field", $key)->first();

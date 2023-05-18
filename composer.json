@@ -1,6 +1,6 @@
 {
     "name": "saidy/voyager-survey",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Create a Dependent dropdown fields to Voyager plugin",
     "type": "library",
     "license": "MIT",

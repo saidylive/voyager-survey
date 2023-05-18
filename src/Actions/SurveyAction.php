@@ -172,8 +172,6 @@ class SurveyAction extends AbstractAction
 
     public function getSurveyLink()
     {
-        $survey_key  = $this->getSurveyModelData("survey_key");
-        $link  = url("public/survey/{$survey_key}");
-        return $link;
+        return $this->getSurveyModelData("survey_link");
     }
 }

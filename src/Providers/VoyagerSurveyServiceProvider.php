@@ -5,6 +5,7 @@ namespace Saidy\VoyagerSurvey\Providers;
 use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\ServiceProvider;
 use Saidy\VoyagerSurvey\Actions\SurveyAction;
+use Saidy\VoyagerSurvey\Actions\SurveyRowAction;
 
 
 class VoyagerSurveyServiceProvider extends ServiceProvider
@@ -26,6 +27,7 @@ class VoyagerSurveyServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Voyager::addAction(SurveyRowAction::class);
         Voyager::addAction(SurveyAction::class);
         $this->registerConfigs();
 

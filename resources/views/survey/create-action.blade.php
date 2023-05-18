@@ -1,23 +1,20 @@
 @php
-    // $edit = !is_null($dataTypeContent->getKey());
-    // $add  = is_null($dataTypeContent->getKey());
-    $edit = false;
-    $add = true;
-    $survey_title = config('voyager.survey.survey_title', 'Registration');
+    $edit = $model ? true : false;
+    $add = $model ? false : true;
 @endphp
 
-@extends('saidy-voyager-survey::layout.master')
+@extends('voyager::master')
 
 @section('css')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @stop
 
-@section('page_title', $survey_title . ': ' . $dataType->getTranslatedAttribute('display_name_singular'))
+@section('page_title', __('voyager::generic.' . ($edit ? 'edit' : 'add')) . ' Survey')
 
 @section('page_header')
-    <h1 class="page-title" style="padding-left: 15px;">
-        <i class="{{ $dataType->icon }}"></i>
-        {{ $survey_title . ': ' . $dataType->getTranslatedAttribute('display_name_singular') }}
+    <h1 class="page-title">
+        <i class="voyager-megaphone"></i>
+        {{ __('voyager::generic.' . ($edit ? 'edit' : 'add')) . ' Survey' }}
     </h1>
     @include('voyager::multilingual.language-selector')
 @stop
@@ -30,19 +27,20 @@
                 <div class="panel panel-bordered">
                     <!-- form start -->
                     <form role="form" class="form-edit-add"
-                        action="{{ $edit ? route('saidy.voyager.survey.public_view_update', ['survey_key' => $survey_key]) : route('saidy.voyager.survey.public_view_store', ['survey_key' => $survey_key]) }}"
+                        action="{{ route('saidy.voyager.survey.store_survey_action', ['slug' => $slug, 'id' => $reference_id]) }}"
                         method="POST" enctype="multipart/form-data">
+
                         <!-- PUT Method if we are editing -->
-                        @if ($edit)
+                        {{-- @if ($edit)
                             {{ method_field('PUT') }}
-                        @endif
+                        @endif --}}
 
                         <!-- CSRF TOKEN -->
                         {{ csrf_field() }}
 
                         <div class="panel-body">
 
-                            @if (isset($errors) && count($errors) > 0)
+                            @if (count($errors) > 0)
                                 <div class="alert alert-danger">
                                     <ul>
                                         @foreach ($errors->all() as $error)
@@ -52,78 +50,58 @@
                                 </div>
                             @endif
 
-                            <!-- Adding / Editing -->
-                            @php
-                                $dataTypeRows = $dataType->{$edit ? 'editRows' : 'addRows'};
-                            @endphp
+                            @if ($model)
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label" for="entity-link">Survey Link</label>
+                                    <div class="d-flex" style="display: flex;">
+                                        <input id="entity-link" type="text" class="form-control"
+                                            value="{{ $model->survey_link }}" readonly>
+                                        <span id="survey-link-copy-btn" class="btn btn-sm btn-default"
+                                            style="margin-left: 1em;margin-top: 0;">
+                                            <span class="icon voyager-documentation"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            @endif
 
+                            <!-- Adding / Editing -->
                             @foreach ($dataTypeRows as $row)
                                 <!-- GET THE DISPLAY OPTIONS -->
                                 @php
-                                    if($is_single){
-                                        if($target_slug_column && ($target_slug_column == $row->field || ($row->type == "relationship" && $row->details->column == $target_slug_column))){
-                                            $row->type = "hidden";
-                                            $details = $row->details;
-                                            $details->default = $reference_id;
-                                            $row->details = $details;
-                                        }
-                                    }
-
                                     $display_options = $row->details->display ?? null;
-                                    $survey = $row->details->survey ?? null;
-                                    $hasReference = isset($survey->reference_slug);
-                                    $reference_slug = $row->details->survey->reference_slug ?? null;
-                                    $reference_field = $row->details->survey->reference_field ?? null;
                                     if ($dataTypeContent->{$row->field . '_' . ($edit ? 'edit' : 'add')}) {
                                         $dataTypeContent->{$row->field} = $dataTypeContent->{$row->field . '_' . ($edit ? 'edit' : 'add')};
                                     }
                                 @endphp
-                                @if ($hasReference)
-                                    @include('saidy-voyager-survey::bread.partials.sub-edit-add', [
-                                        'reference_slug' => $reference_slug,
-                                        'reference_field' => $reference_field ?? $row->field,
-                                    ])
-                                @else
-                                    @if (isset($row->details->legend) && isset($row->details->legend->text))
-                                        <legend class="text-{{ $row->details->legend->align ?? 'center' }}"
-                                            style="background-color: {{ $row->details->legend->bgcolor ?? '#f0f0f0' }};padding: 5px;">
-                                            {{ $row->details->legend->text }}</legend>
-                                    @endif
-
-                                    <div class="form-group @if ($row->type == 'hidden') hidden @endif col-md-{{ $display_options->width ?? 12 }} {{ isset($errors) && $errors->has($row->field) ? 'has-error' : '' }}"
-                                        @if (isset($display_options->id)) {{ "id=$display_options->id" }} @endif>
-                                        {{ $row->slugify }}
-                                        <label class="control-label"
-                                            for="name">{{ $row->getTranslatedAttribute('display_name') }}</label>
-                                        @include('voyager::multilingual.input-hidden-bread-edit-add')
-                                        @if ($add && isset($row->details->view_add))
-                                            @include($row->details->view_add, [
-                                                'row' => $row,
-                                                'dataType' => $dataType,
-                                                'dataTypeContent' => $dataTypeContent,
-                                                'content' => $dataTypeContent->{$row->field},
-                                                'view' => 'add',
-                                                'options' => $row->details,
-                                            ])
-                                        @elseif ($row->type == 'relationship')
-                                            @include('voyager::formfields.relationship', [
-                                                'options' => $row->details,
-                                            ])
-                                        @else
-                                            {!! app('voyager')->formField($row, $dataType, $dataTypeContent) !!}
-                                        @endif
-
-                                        @foreach (app('voyager')->afterFormFields($row, $dataType, $dataTypeContent) as $after)
-                                            {!! $after->handle($row, $dataType, $dataTypeContent) !!}
-                                        @endforeach
-                                        @if (isset($errors) && $errors->has($row->field))
-                                            @foreach ($errors->get($row->field) as $error)
-                                                <span class="help-block">{{ $error }}</span>
-                                            @endforeach
-                                        @endif
-                                    </div>
+                                @if (isset($row->details->legend) && isset($row->details->legend->text))
+                                    <legend class="text-{{ $row->details->legend->align ?? 'center' }}"
+                                        style="background-color: {{ $row->details->legend->bgcolor ?? '#f0f0f0' }};padding: 5px;">
+                                        {{ $row->details->legend->text }}</legend>
                                 @endif
 
+                                <div class="form-group @if ($row->type == 'hidden') hidden @endif col-md-{{ $display_options->width ?? 12 }} {{ $errors->has($row->field) ? 'has-error' : '' }}"
+                                    @if (isset($display_options->id)) {{ "id=$display_options->id" }} @endif>
+                                    {{ $row->slugify }}
+                                    <label class="control-label"
+                                        for="name">{{ $row->getTranslatedAttribute('display_name') }}</label>
+                                    @include('voyager::multilingual.input-hidden-bread-edit-add')
+                                    @if ($row->type == 'relationship')
+                                        @include('voyager::formfields.relationship', [
+                                            'options' => $row->details,
+                                        ])
+                                    @else
+                                        {!! app('voyager')->formField($row, $dataType, $dataTypeContent) !!}
+                                    @endif
+
+                                    @foreach (app('voyager')->afterFormFields($row, $dataType, $dataTypeContent) as $after)
+                                        {!! $after->handle($row, $dataType, $dataTypeContent) !!}
+                                    @endforeach
+                                    @if ($errors->has($row->field))
+                                        @foreach ($errors->get($row->field) as $error)
+                                            <span class="help-block">{{ $error }}</span>
+                                        @endforeach
+                                    @endif
+                                </div>
                             @endforeach
 
                         </div><!-- panel-body -->
@@ -138,7 +116,7 @@
 
                 <div style="display:none">
                     <input type="hidden" id="upload_url" value="{{ route('voyager.upload') }}">
-                    <input type="hidden" id="upload_type_slug" value="{{ $dataType->slug }}">
+                    <input type="hidden" id="upload_type_slug" value="{{ $slug }}">
                 </div>
             </div>
         </div>
@@ -180,7 +158,7 @@
             $file = $(this).siblings(tag);
 
             params = {
-                slug: '{{ $dataType->slug }}',
+                slug: '{{ $slug }}',
                 filename: $file.data('file-name'),
                 id: $file.data('id'),
                 field: $file.parent().data('field-name'),
@@ -195,6 +173,8 @@
 
     $('document').ready(function() {
         $('.toggleswitch').bootstrapToggle();
+
+        var $copyBtn = $('#survey-link-copy-btn');
 
         //Init datepicker for date fields if data-datepicker attribute defined
         //or if browser does not handle date inputs
@@ -211,12 +191,6 @@
             }
         });
 
-        @if ($isModelTranslatable)
-            $('.side-body').multilingual({
-                "editing": true
-            });
-        @endif
-
         $('.side-body input[data-slug-origin]').each(function(i, el) {
             $(el).slugify();
         });
@@ -227,8 +201,7 @@
         $('.form-group').on('click', '.remove-single-file', deleteHandler('a', false));
 
         $('#confirm_delete').on('click', function() {
-            $.post('{{ route('voyager.' . $dataType->slug . '.media.remove') }}', params, function(
-                response) {
+            $.post('{{ route('voyager.' . $slug . '.media.remove') }}', params, function(response) {
                 if (response &&
                     response.data &&
                     response.data.status &&
@@ -246,6 +219,50 @@
             $('#confirm_delete_modal').modal('hide');
         });
         $('[data-toggle="tooltip"]').tooltip();
+
+        $copyBtn.click(function(e) {
+            var $copyBtnLink = document.getElementById('entity-link');
+
+            // Select the text field
+            $copyBtnLink.select();
+            $copyBtnLink.setSelectionRange(0, 99999); // For mobile devices
+
+            toastr.success('Link copied.')
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText($copyBtnLink.value);
+
+        })
+
+        function loadTableColumnOptions() {
+            var target_slug = $('[name="target_slug"]').val();
+            var default_value = {!! isset($model->target_slug_column) ? "'{$model->target_slug_column}'" : 'null' !!};
+
+            $('[name="target_slug_column"]').empty();
+            $.ajax({
+                    type: 'get',
+                    url: '{{ url('survey/target_columns') }}/' + target_slug,
+                })
+                .done((result) => {
+                    var columns = Object.keys(result)
+                    if (columns && columns.length) {
+                        columns.map(function(column) {
+                            var newOption = new Option(column, column, false, column ==
+                                default_value);
+                            $('[name="target_slug_column"]').append(newOption);
+                        });
+                        $('[name="target_slug_column"]').trigger('change');
+                    }
+                });
+        }
+
+        $('[name="target_slug"]').on('change', function(e) {
+            loadTableColumnOptions()
+            // var target_slug = e.target.value;
+            // console.log("🚀 ~ file: create-action.blade.php:208 ~ $ ~ target_slug:", target_slug)
+            // $('[name="target_slug_column"]').
+        });
+        loadTableColumnOptions();
     });
 </script>
 @stop
