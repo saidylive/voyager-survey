@@ -1,5 +1,9 @@
+@php
+    $survey_name = config('voyager.survey.survey_name', 'Form');
+@endphp
+
 {{-- @include('saidy-voyager-survey::bread.styles.survey_action_styles') --}}
-<a class="btn btn-info" id="bulk_survey_btn"><i class="voyager-megaphone"></i> <span>Survey</span></a>
+<a class="btn btn-info" id="bulk_survey_btn"><i class="voyager-megaphone"></i> <span>{{ $survey_name }}</span></a>
 
 {{-- Bulk import modal --}}
 <div class="modal modal-info fade" tabindex="-1" id="bulk_survey_modal" role="dialog">
@@ -10,7 +14,7 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title">
-                        <i class="voyager-upload"></i> {{ __('Survey: ') }} <span id="bulk_survey_count"></span> <span
+                        <i class="voyager-upload"></i> {{ $survey_name }}:  <span id="bulk_survey_count"></span> <span
                             id="bulk_survey_display_name"></span>
                     </h4>
                 </div>

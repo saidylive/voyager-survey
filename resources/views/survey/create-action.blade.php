@@ -1,6 +1,7 @@
 @php
     $edit = $model ? true : false;
     $add = $model ? false : true;
+    $survey_name = config('voyager.survey.survey_name', 'Form');
 @endphp
 
 @extends('voyager::master')
@@ -14,7 +15,7 @@
 @section('page_header')
     <h1 class="page-title">
         <i class="voyager-megaphone"></i>
-        {{ __('voyager::generic.' . ($edit ? 'edit' : 'add')) . ' Survey' }}
+        {{ __('voyager::generic.' . ($edit ? 'edit' : 'add')) . " $survey_name" }}
     </h1>
     @include('voyager::multilingual.language-selector')
 @stop
@@ -52,7 +53,7 @@
 
                             @if ($model)
                                 <div class="form-group col-sm-12">
-                                    <label class="control-label" for="entity-link">Survey Link</label>
+                                    <label class="control-label" for="entity-link">{{ $survey_name }} Link</label>
                                     <div class="d-flex" style="display: flex;">
                                         <input id="entity-link" type="text" class="form-control"
                                             value="{{ $model->survey_link }}" readonly>

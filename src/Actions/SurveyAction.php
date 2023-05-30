@@ -33,16 +33,6 @@ class SurveyAction extends AbstractAction
      */
     protected $readerType;
 
-    public function getFormConfigs()
-    {
-        $rows = [
-            [
-
-            ]
-        ];
-
-    }
-
     public function getTitle()
     {
         return __('saidy-voyager-survey::generic.bulk_import');
@@ -121,8 +111,9 @@ class SurveyAction extends AbstractAction
             $model = SurveyModel::create($inputs);
 
         }
+        $title = config('voyager.survey.survey_name', 'Form');
         return redirect($comingFrom)->with([
-            'message'    => $id ? "Survey updated successfully" : "Survey Created Successfully",
+            'message'    => $id ? "$title updated successfully" : "$title Created Successfully",
             'alert-type' => 'success',
         ]);
     }

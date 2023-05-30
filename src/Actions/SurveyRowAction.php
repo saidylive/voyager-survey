@@ -21,7 +21,7 @@ class SurveyRowAction extends AbstractAction
 
     public function getTitle()
     {
-        return 'Survey';
+        return config('voyager.survey.survey_name', 'Form');
     }
 
     public function getIcon()
